@@ -60,6 +60,7 @@ public class ChangePersonActivity extends AppCompatActivity {
             editTextPersonPhone.setText(mainIntent.getStringExtra(PERSON_PHONE));
 
             if (mainIntent.getStringExtra(PERSON_PHOTO) != null) {
+                photo = Uri.parse(mainIntent.getStringExtra(PERSON_PHOTO));
                 Picasso.get().load(Uri.parse(mainIntent.getStringExtra(PERSON_PHOTO))).into(personImage);
             }
         }

@@ -2,10 +2,20 @@ package com.example.coolrecyclerviewapp;
 
 import android.net.Uri;
 
-public class Person {
+import androidx.annotation.NonNull;
+import androidx.room.ColumnInfo;
+import androidx.room.Entity;
+import androidx.room.Ignore;
+import androidx.room.PrimaryKey;
 
+@Entity(tableName = "person")
+public class Person {
+    @Ignore
     private Uri photo;
+    @NonNull
+    @PrimaryKey
     private String name;
+
     private String email;
     private String phone;
 

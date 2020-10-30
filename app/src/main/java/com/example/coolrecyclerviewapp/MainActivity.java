@@ -17,6 +17,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.os.Handler;
+import android.os.Message;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -33,12 +35,24 @@ public class MainActivity extends AppCompatActivity {
     private MainAdapter adapter;
     private List<Person> list;
 
+    static Handler handler;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        handler = new Handler(new Handler.Callback() {
+            @Override
+            public boolean handleMessage(Message message) {
+                return false;
+                adapter.personList = list;
+                adapter.notifyDataSetChanged();
+            }
+        });
         initComponents();
+
     }
+
 
     private void initComponents() {
         initItemList();
@@ -50,15 +64,13 @@ public class MainActivity extends AppCompatActivity {
 
     private void initItemList() {
         list = new ArrayList<>();
-        Person defaultPerson = new Person();
-        Uri imageUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE +
-                "://" + getResources().getResourcePackageName(R.drawable.hm)
-                + '/' + getResources().getResourceTypeName(R.drawable.hm) + '/' + getResources().getResourceEntryName(R.drawable.hm) );
-        defaultPerson.setPhoto(imageUri);
-        defaultPerson.setName("Svyatoslav");
-        defaultPerson.setEmail("email@mail.com");
-        defaultPerson.setPhone("+79876543210");
-        list.add(defaultPerson);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                list.addAll(App.db.personDAO().readAll());
+                handler.sendEmptyMessage(0);
+            }
+        });
     }
 
     private void initAdapter() {
@@ -87,23 +99,41 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK){
             if (requestCode == CreatePersonActivity.ADD_PERSON){
-                Person person = new Person();
+                final Person person = new Person();
                 person.setPhoto(Uri.parse(data.getStringExtra(CreatePersonActivity.PERSON_PHOTO)));
                 person.setName(data.getStringExtra(CreatePersonActivity.PERSON_NAME));
                 person.setEmail(data.getStringExtra(CreatePersonActivity.PERSON_EMAIL));
                 person.setPhone(data.getStringExtra(CreatePersonActivity.PERSON_PHONE));
                 list.add(person);
+                list = new ArrayList<>();
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        App.db.personDAO().create(person);
+                        handler.sendEmptyMessage(0);
+
+                    }
+                });
                 adapter.notifyDataSetChanged();
+
             }
             if (requestCode == ChangePersonActivity.EDIT_PERSON){
                 int position = data.getIntExtra(ChangePersonActivity.POSITION, -1);
                 if (position == -1) return;
-                Person person = list.get(position);
+                final Person person = list.get(position);
                 person.setPhoto(Uri.parse(data.getStringExtra(CreatePersonActivity.PERSON_PHOTO)));
                 person.setName(data.getStringExtra(CreatePersonActivity.PERSON_NAME));
                 person.setEmail(data.getStringExtra(CreatePersonActivity.PERSON_EMAIL));
                 person.setPhone(data.getStringExtra(CreatePersonActivity.PERSON_PHONE));
                 list.set(position, person);
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        App.db.personDAO().update(person);
+                        handler.sendEmptyMessage(0);
+
+                    }
+                });
                 adapter.notifyDataSetChanged();
             }
         }

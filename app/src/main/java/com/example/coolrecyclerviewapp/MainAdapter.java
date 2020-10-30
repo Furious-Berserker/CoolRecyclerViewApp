@@ -17,8 +17,8 @@ import java.util.List;
 
 public class MainAdapter extends RecyclerView.Adapter<MainAdapter.ViewHolder> {
 
-    private Context mainContext;
-    private List<Person> personList;
+    public Context mainContext;
+    public List<Person> personList;
 
     public MainAdapter(Context context, List<Person> list) {
         this.mainContext = context;
